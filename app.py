@@ -1,3 +1,6 @@
+pip install streamlit 
+pip install openai 
+
 # Importing required packages
 import streamlit as st
 import openai
