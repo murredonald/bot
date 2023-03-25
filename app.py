@@ -47,5 +47,4 @@ def ChatGPT(user_query):
 # call the main function
 main() 
 
-streamlit run app.py
 
