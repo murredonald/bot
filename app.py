@@ -1,43 +1,51 @@
-import openai
-import toml
+# Importing required packages
 import streamlit as st
+import openai
 
+st.title("Chatting with ChatGPT")
+st.sidebar.header("Instructions")
+st.sidebar.info(
+    '''This is a web application that allows you to interact with 
+       the OpenAI API's implementation of the ChatGPT model.
+       Enter a **query** in the **text box** and **press enter** to receive 
+       a **response** from the ChatGPT
+       '''
+    )
 
-def show_messages(text):
-    messages_str = [
-        f"{_['role']}: {_['content']}" for _ in st.session_state["messages"][1:]
-    ]
-    text.text_area("Messages", value=str("\n".join(messages_str)), height=400)
+# Set the model engine and your OpenAI API key
+model_engine = "text-davinci-003"
+openai.api_key = "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"
 
+def main():
+    '''
+    This function gets the user input, pass it to ChatGPT function and 
+    displays the response
+    '''
+    # Get user input
+    user_query = st.text_input("Enter query here, to exit enter :q", "what is Python?")
+    if user_query != ":q" or user_query != "":
+        # Pass the query to the ChatGPT function
+        response = ChatGPT(user_query)
+        return st.write(f"{user_query} {response}")
 
-with open("secrets.toml", "r") as f:
-    config = toml.load(f)
+def ChatGPT(user_query):
+    ''' 
+    This function uses the OpenAI API to generate a response to the given 
+    user_query using the ChatGPT model
+    '''
+    # Use the OpenAI API to generate a response
+    completion = openai.Completion.create(
+                                  engine = model_engine,
+                                  prompt = user_query,
+                                  max_tokens = 1024,
+                                  n = 1,
+                                  temperature = 0.5,
+                                      )
+    response = completion.choices[0].text
+    return response
 
-openai.api_key = config["OPENAI_KEY"]
-BASE_PROMPT = [{"role": "system", "content": "You are a helpful assistant."}]
+# call the main function
+main() 
 
-if "messages" not in st.session_state:
-    st.session_state["messages"] = BASE_PROMPT
+streamlit run app.py
 
-st.header("STREAMLIT GPT-3 CHATBOT")
-
-text = st.empty()
-show_messages(text)
-
-prompt = st.text_input("Prompt", value="Enter your message here...")
-
-if st.button("Send"):
-    with st.spinner("Generating response..."):
-        st.session_state["messages"] += [{"role": "user", "content": prompt}]
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", messages=st.session_state["messages"]
-        )
-        message_response = response["choices"][0]["message"]["content"]
-        st.session_state["messages"] += [
-            {"role": "system", "content": message_response}
-        ]
-        show_messages(text)
-
-if st.button("Clear"):
-    st.session_state["messages"] = BASE_PROMPT
-    show_messages(text)
